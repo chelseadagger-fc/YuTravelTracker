@@ -13,14 +13,47 @@ const db = new pg.Client({
   port: 5432,
 })
 
-db.connect();
+let visitedCountries;
+let numCountries;
+
+db.query("SELECT country_code FROM visited_countries", (err, res) => {
+  db.connect();
+  if (err) {
+    console.error("Error executing query.", err.stack);
+  } else {
+    visitedCountries = res.rows;
+  }
+  db.end();
+})
+
+db.query("SELECT COUNT(*) FROM visited_countries", (err, res) => {
+  db.connect();
+  if (err) {
+    console.error("Error executing query.", err.stack);
+  } else {
+    numCountries = res.rows;
+  }
+  db.end();
+})
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", async (req, res) => {
   //Write your code here.
+
+  res.render("index.ejs", { numCountries : total })
 });
+
+
+
+
+
+
+
+
+
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
