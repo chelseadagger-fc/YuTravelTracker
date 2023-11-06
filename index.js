@@ -8,12 +8,13 @@ const port = 3000;
 const db = new pg.Client({
   user: "postgres",
   host: "localhost",
-  database: "world",
-  password: "1234",
+  database: "postgres",
+  password: "1453",
   port: 5432,
 })
+db.connect();
 
-let query;
+let visitedList;
 let countries = [];
 
 // db.query("SELECT COUNT(*) FROM visited_countries", (err, res) => {
@@ -31,21 +32,36 @@ app.use(express.static("public"));
 
 app.get("/", async (req, res) => {
   //Write your code here.
-  db.connect();
 
-  query = await db.query("SELECT country_code FROM visited_countries");
+  visitedList = await db.query("SELECT country_code FROM visited_countries");
   
   let countries = [];
 
-  result.rows.forEach((country) => {
+  visitedList.rows.forEach((country) => {
     countries.push(country.country_code);
   });
 
   res.render("index.ejs", { countries: countries, total: countries.length });
 
-  db.end();
 });
 
+app.post("/add", async (req, res) => {
+  let newCountry = req.body["country"];
+  
+  let newCode = await db.query(
+    "SELECT country_code FROM countries WHERE country_name = $1",
+    [newCountry]
+  );
+
+
+    let pushCode = newCode.rows[0].country_code;
+
+    await db.query("INSERT INTO visited_countries (country_code) VALUES ($1)",
+    [pushCode]);
+
+    res.redirect("/");
+  
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
