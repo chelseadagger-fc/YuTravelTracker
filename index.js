@@ -9,9 +9,10 @@ const db = new pg.Client({
   user: "postgres",
   host: "localhost",
   database: "postgres",
-  password: "1453",
+  password: "1453", // constantinople
   port: 5432,
 })
+
 db.connect();
 
 let visitedList;
@@ -31,7 +32,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", async (req, res) => {
-  //Write your code here.
 
   visitedList = await db.query("SELECT country_code FROM visited_countries");
   
@@ -46,13 +46,14 @@ app.get("/", async (req, res) => {
 });
 
 app.post("/add", async (req, res) => {
+
   let newCountry = req.body["country"];
   
-  let newCode = await db.query(
-    "SELECT country_code FROM countries WHERE country_name = $1",
-    [newCountry]
-  );
-
+  try {
+    let newCode = await db.query(
+      "SELECT country_code FROM countries WHERE country_name = $1",
+      [newCountry]
+    );
 
     let pushCode = newCode.rows[0].country_code;
 
@@ -60,7 +61,10 @@ app.post("/add", async (req, res) => {
     [pushCode]);
 
     res.redirect("/");
-  
+  } catch (err) {
+    console.log(err);
+    res.render("index.ejs", { countries: countries, total: countries.length, error: "Country does not exist; try again." });
+  }
 });
 
 app.listen(port, () => {
